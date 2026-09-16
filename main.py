@@ -2,10 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-
-# -----------------------------------
-# 기본 설정
-# -----------------------------------
 st.set_page_config(
     page_title="영화 데이터 그래프 도감 2 - 분포와 관계",
     layout="wide"
@@ -13,10 +9,6 @@ st.set_page_config(
 
 st.title("영화 데이터 그래프 도감 2 - 분포와 관계")
 
-
-# -----------------------------------
-# 데이터 불러오기
-# -----------------------------------
 DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
 
 
@@ -27,12 +19,7 @@ def load_data():
 
 df = load_data()
 
-
-# -----------------------------------
-# 데이터 전처리
-# -----------------------------------
-
-# 장르가 여러 개일 경우 첫 번째 장르만 사용
+# 장르가 여러 개라면 첫 번째 장르만 사용
 df["genre"] = (
     df["genre"]
     .fillna("알 수 없음")
@@ -42,24 +29,27 @@ df["genre"] = (
     .str.strip()
 )
 
-# 총 관객을 숫자로 변환
+# 숫자형 데이터로 변환
 df["total_audi"] = pd.to_numeric(
     df["total_audi"],
     errors="coerce"
 ).fillna(0)
 
+df["first_scrn"] = pd.to_numeric(
+    df["first_scrn"],
+    errors="coerce"
+).fillna(0)
 
-# ===================================
+
+# --------------------------------------------------
 # 그래프 1
-# ===================================
+# --------------------------------------------------
+
 st.header("그래프 1. 장르별 영화 편수")
 
-# 장르별 영화 개수 계산
 genre_count = df["genre"].value_counts().reset_index()
 genre_count.columns = ["장르", "영화 편수"]
 
-
-# 도넛 차트
 fig1 = px.pie(
     genre_count,
     names="장르",
@@ -82,13 +72,8 @@ fig1.update_layout(
     margin=dict(t=60, l=20, r=20, b=20)
 )
 
-st.plotly_chart(
-    fig1,
-    use_container_width=True
-)
+st.plotly_chart(fig1, use_container_width=True)
 
-
-# 그래프 1 설명 공간
 st.subheader("이 그래프로 알 수 있는 것")
 
 st.text_area(
@@ -99,15 +84,14 @@ st.text_area(
 )
 
 
-# ===================================
+# --------------------------------------------------
 # 그래프 2
-# ===================================
+# --------------------------------------------------
+
 st.divider()
 
 st.header("그래프 2. 장르별 영화 총 관객 트리맵")
 
-
-# 장르 → 영화명 순서로 트리맵 구성
 fig2 = px.treemap(
     df,
     path=["genre", "movieNm"],
@@ -115,7 +99,6 @@ fig2 = px.treemap(
     title="장르별 영화 총 관객"
 )
 
-# 마우스를 올렸을 때 영화명과 총 관객 표시
 fig2.update_traces(
     hovertemplate=(
         "<b>%{label}</b><br>"
@@ -128,13 +111,8 @@ fig2.update_layout(
     margin=dict(t=60, l=20, r=20, b=20)
 )
 
-st.plotly_chart(
-    fig2,
-    use_container_width=True
-)
+st.plotly_chart(fig2, use_container_width=True)
 
-
-# 그래프 2 설명 공간
 st.subheader("이 그래프로 알 수 있는 것")
 
 st.text_area(
@@ -145,17 +123,13 @@ st.text_area(
 )
 
 
-# ===================================
+# --------------------------------------------------
 # 그래프 3
-# ===================================
+# --------------------------------------------------
+
 st.divider()
 
 st.header("그래프 3. 총 관객 분포")
-
-
-# -----------------------------------
-# 히스토그램
-# -----------------------------------
 
 fig3 = px.histogram(
     df,
@@ -182,44 +156,24 @@ fig3.update_layout(
     margin=dict(t=60, l=20, r=20, b=20)
 )
 
-st.plotly_chart(
-    fig3,
-    use_container_width=True
-)
+st.plotly_chart(fig3, use_container_width=True)
 
-
-# -----------------------------------
 # 가장 많은 영화가 몰려 있는 구간 계산
-# -----------------------------------
-
-# 총 관객을 20개 구간으로 나눔
 bins = pd.cut(
     df["total_audi"],
     bins=20
 )
 
 bin_counts = bins.value_counts().sort_index()
-
-# 영화가 가장 많이 포함된 구간
 most_common_bin = bin_counts.idxmax()
 
 range_start = most_common_bin.left
 range_end = most_common_bin.right
 
-
-# -----------------------------------
-# 총 관객이 가장 많은 영화 찾기
-# -----------------------------------
-
+# 가장 관객이 많은 영화
 max_audi_index = df["total_audi"].idxmax()
-
 max_movie_name = df.loc[max_audi_index, "movieNm"]
 max_movie_audi = df.loc[max_audi_index, "total_audi"]
-
-
-# -----------------------------------
-# 그래프 아래 결과 문구
-# -----------------------------------
 
 st.markdown(
     f"""
@@ -231,8 +185,6 @@ st.markdown(
 """
 )
 
-
-# 그래프 3 설명 공간
 st.subheader("이 그래프로 알 수 있는 것")
 
 st.text_area(
@@ -240,4 +192,58 @@ st.text_area(
     placeholder="이 그래프로 알 수 있는 것을 한 문장으로 작성하세요.",
     height=100,
     key="graph3_explanation"
+)
+
+
+# --------------------------------------------------
+# 그래프 4
+# --------------------------------------------------
+
+st.divider()
+
+st.header("그래프 4. 개봉일 스크린수와 총 관객의 관계")
+
+fig4 = px.scatter(
+    df,
+    x="first_scrn",
+    y="total_audi",
+    color="genre",
+    hover_name="movieNm",
+    title="개봉일 스크린수와 총 관객의 관계",
+    labels={
+        "first_scrn": "개봉일 스크린수",
+        "total_audi": "총 관객",
+        "genre": "장르"
+    }
+)
+
+fig4.update_traces(
+    marker=dict(
+        size=10,
+        opacity=0.75
+    ),
+    hovertemplate=(
+        "<b>%{hovertext}</b><br>"
+        "개봉일 스크린수: %{x:,.0f}개<br>"
+        "총 관객: %{y:,.0f}명"
+        "<extra></extra>"
+    )
+)
+
+fig4.update_layout(
+    xaxis_title="개봉일 스크린수",
+    yaxis_title="총 관객",
+    margin=dict(t=60, l=20, r=20, b=20),
+    legend_title="장르"
+)
+
+st.plotly_chart(fig4, use_container_width=True)
+
+st.subheader("이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "내용을 입력하세요.",
+    placeholder="이 그래프로 알 수 있는 것을 한 문장으로 작성하세요.",
+    height=100,
+    key="graph4_explanation"
 )
