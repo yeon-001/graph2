@@ -115,7 +115,6 @@ fig2 = px.treemap(
     title="장르별 영화 총 관객"
 )
 
-
 # 마우스를 올렸을 때 영화명과 총 관객 표시
 fig2.update_traces(
     hovertemplate=(
@@ -147,14 +146,93 @@ st.text_area(
 
 
 # ===================================
-# 그래프 3 자리
+# 그래프 3
 # ===================================
 st.divider()
 
-st.header("그래프 3")
+st.header("그래프 3. 총 관객 분포")
 
-st.info("세 번째 그래프를 여기에 추가할 수 있습니다.")
 
+# -----------------------------------
+# 히스토그램
+# -----------------------------------
+
+fig3 = px.histogram(
+    df,
+    x="total_audi",
+    nbins=20,
+    title="영화별 총 관객 분포",
+    labels={
+        "total_audi": "총 관객",
+        "count": "영화 편수"
+    }
+)
+
+fig3.update_traces(
+    hovertemplate=(
+        "총 관객 구간: %{x}<br>"
+        "영화 편수: %{y}편"
+        "<extra></extra>"
+    )
+)
+
+fig3.update_layout(
+    xaxis_title="총 관객",
+    yaxis_title="영화 편수",
+    margin=dict(t=60, l=20, r=20, b=20)
+)
+
+st.plotly_chart(
+    fig3,
+    use_container_width=True
+)
+
+
+# -----------------------------------
+# 가장 많은 영화가 몰려 있는 구간 계산
+# -----------------------------------
+
+# 총 관객을 20개 구간으로 나눔
+bins = pd.cut(
+    df["total_audi"],
+    bins=20
+)
+
+bin_counts = bins.value_counts().sort_index()
+
+# 영화가 가장 많이 포함된 구간
+most_common_bin = bin_counts.idxmax()
+
+range_start = most_common_bin.left
+range_end = most_common_bin.right
+
+
+# -----------------------------------
+# 총 관객이 가장 많은 영화 찾기
+# -----------------------------------
+
+max_audi_index = df["total_audi"].idxmax()
+
+max_movie_name = df.loc[max_audi_index, "movieNm"]
+max_movie_audi = df.loc[max_audi_index, "total_audi"]
+
+
+# -----------------------------------
+# 그래프 아래 결과 문구
+# -----------------------------------
+
+st.markdown(
+    f"""
+**대부분의 영화가 몰려 있는 구간:**  
+총 관객 **{range_start:,.0f}명 ~ {range_end:,.0f}명** 구간에 가장 많은 영화가 몰려 있습니다.
+
+**가장 관객이 많은 영화:**  
+**{max_movie_name}**으로, 총 관객은 **{max_movie_audi:,.0f}명**입니다.
+"""
+)
+
+
+# 그래프 3 설명 공간
 st.subheader("이 그래프로 알 수 있는 것")
 
 st.text_area(
