@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -124,4 +123,3 @@ st.text_area(
     height=100,
     key="graph3_explanation"
 )
-```
