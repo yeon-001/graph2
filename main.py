@@ -29,6 +29,14 @@ df["genre"] = (
     .str.strip()
 )
 
+# 제작 국가 결측값 처리
+df["nation"] = (
+    df["nation"]
+    .fillna("알 수 없음")
+    .astype(str)
+    .str.strip()
+)
+
 # 숫자형 데이터로 변환
 df["total_audi"] = pd.to_numeric(
     df["total_audi"],
@@ -37,6 +45,11 @@ df["total_audi"] = pd.to_numeric(
 
 df["first_scrn"] = pd.to_numeric(
     df["first_scrn"],
+    errors="coerce"
+).fillna(0)
+
+df["first_week_audi"] = pd.to_numeric(
+    df["first_week_audi"],
     errors="coerce"
 ).fillna(0)
 
@@ -313,4 +326,100 @@ st.text_area(
     placeholder="이 그래프로 알 수 있는 것을 한 문장으로 작성하세요.",
     height=100,
     key="graph5_explanation"
+)
+
+
+# --------------------------------------------------
+# 그래프 6
+# --------------------------------------------------
+
+st.divider()
+
+st.header("그래프 6. 개봉일 스크린수·총 관객·첫 주 관객의 관계")
+
+fig6 = px.scatter(
+    df,
+    x="first_scrn",
+    y="total_audi",
+    size="first_week_audi",
+    color="genre",
+    hover_name="movieNm",
+    size_max=55,
+    title="개봉일 스크린수와 총 관객의 관계 - 첫 주 관객 버블 크기",
+    labels={
+        "first_scrn": "개봉일 스크린수",
+        "total_audi": "총 관객",
+        "first_week_audi": "첫 주 관객",
+        "genre": "장르"
+    }
+)
+
+fig6.update_traces(
+    marker=dict(
+        opacity=0.7,
+        line=dict(width=1)
+    ),
+    hovertemplate=(
+        "<b>%{hovertext}</b><br>"
+        "개봉일 스크린수: %{x:,.0f}개<br>"
+        "총 관객: %{y:,.0f}명<br>"
+        "첫 주 관객: %{marker.size:,.0f}명"
+        "<extra></extra>"
+    )
+)
+
+fig6.update_layout(
+    xaxis_title="개봉일 스크린수",
+    yaxis_title="총 관객",
+    margin=dict(t=60, l=20, r=20, b=20),
+    legend_title="장르"
+)
+
+st.plotly_chart(fig6, use_container_width=True)
+
+st.subheader("이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "내용을 입력하세요.",
+    placeholder="이 그래프로 알 수 있는 것을 한 문장으로 작성하세요.",
+    height=100,
+    key="graph6_explanation"
+)
+
+
+# --------------------------------------------------
+# 그래프 7
+# --------------------------------------------------
+
+st.divider()
+
+st.header("그래프 7. 제작 국가 → 장르별 영화 편수")
+
+fig7 = px.sunburst(
+    df,
+    path=["nation", "genre"],
+    title="제작 국가에서 장르로 내려가는 영화 편수",
+)
+
+fig7.update_traces(
+    hovertemplate=(
+        "<b>%{label}</b><br>"
+        "영화 편수: %{value}편"
+        "<extra></extra>"
+    )
+)
+
+fig7.update_layout(
+    margin=dict(t=60, l=20, r=20, b=20)
+)
+
+st.plotly_chart(fig7, use_container_width=True)
+
+st.subheader("이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "내용을 입력하세요.",
+    placeholder="이 그래프로 알 수 있는 것을 한 문장으로 작성하세요.",
+    height=100,
+    key="graph7_explanation"
 )
